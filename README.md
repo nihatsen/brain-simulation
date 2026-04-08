@@ -32,11 +32,9 @@ Current problems to add to the article
 
 *Memristor material
 
-*Connections between neurons (electron is not suitable, chip will be too hot to cool off, instead mush use optics.)
+*Cooling. How do you cool a 850 layer chip? How do you build a cooling system INSIDE the chip? you cannot just connect water blocks each side of the chip.
 
-* Cooling. How do you cool a 850 layer chip? How do you build a cooling system INSIDE the chip? you cannot just connect water blocks each side of the chip.
-
-At this point, our only limitation is material science. 
+-At this point, our only limitation is material science. 
 
 ---------------
 
