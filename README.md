@@ -23,7 +23,10 @@ NbO2 is the current new most promising material because it can handle much much 
 NbO₂ is currently stuck in the laboratory phase.
 
 
+https://nihatsen.github.io/brain-simulation/
 
+
+**TODO**
 ---------------
 
 Current problems to add to the article
@@ -37,9 +40,6 @@ Current problems to add to the article
 -At this point, our only limitation is material science. 
 
 ---------------
-
-
---I will continue on 9 April 2026--
 
 
 
