@@ -1,0 +1,218 @@
+
+<style>
+.sim-sec{margin:1.5rem 0}
+.sim-ctrl{display:flex;flex-wrap:wrap;gap:12px;margin:.6rem 0;align-items:center}
+.ctrl-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--color-text-secondary)}
+.ctrl-row input[type=range]{width:110px}
+.sval{font-weight:500;color:var(--color-text-primary);min-width:54px;font-size:13px;font-variant-numeric:tabular-nums}
+.slbl{font-size:13px;font-weight:500;color:var(--color-text-secondary);margin:.2rem 0 .5rem}
+.mgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 1.4rem}
+.mc{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:11px}
+.mc-l{font-size:11px;color:var(--color-text-tertiary);margin:0 0 3px}
+.mc-v{font-size:17px;font-weight:500;color:var(--color-text-primary)}
+.mc-s{font-size:11px;color:var(--color-text-secondary);margin:2px 0 0}
+.div{border:none;border-top:.5px solid var(--color-border-tertiary);margin:1.4rem 0}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin:6px 0;font-size:12px;color:var(--color-text-secondary)}
+.lsq{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:3px;vertical-align:middle}
+.lcaret{display:inline-block;width:18px;height:2px;margin-right:3px;vertical-align:middle}
+.note{font-size:11px;color:var(--color-text-tertiary);margin:6px 0 0}
+</style>
+
+<h2 class="sr-only">NbO₂ memristor physics simulator with I–V curve, thermal dynamics, endurance comparison, and electrode explorer</h2>
+
+<div class="mgrid">
+  <div class="mc"><div class="mc-l">Threshold voltage</div><div class="mc-v" id="m-vth">1.2 V</div><div class="mc-s">NbO₂ snap-on</div></div>
+  <div class="mc"><div class="mc-l">Mott temperature</div><div class="mc-v">1080 K</div><div class="mc-s">Insulator→metal</div></div>
+  <div class="mc"><div class="mc-l">Resistance window</div><div class="mc-v" id="m-rwin">2000×</div><div class="mc-s">R_off / R_on</div></div>
+  <div class="mc"><div class="mc-l">Endurance gap</div><div class="mc-v">~10⁴×</div><div class="mc-s">vs brain target</div></div>
+</div>
+
+<div class="slbl">I–V characteristic — threshold switching (blue = forward sweep, orange = return)</div>
+<div class="sim-ctrl">
+  <div class="ctrl-row"><span>V_threshold</span><input type="range" min="0.5" max="2.0" step="0.1" value="1.2" id="vth-s"><span class="sval" id="vth-o">1.2 V</span></div>
+  <div class="ctrl-row"><span>Insulator quality</span><input type="range" min="1" max="5" step="1" value="3" id="roff-s"><span class="sval" id="roff-o">500 kΩ</span></div>
+</div>
+<div style="position:relative;width:100%;height:240px"><canvas id="ivC" role="img" aria-label="I-V curve showing threshold switching snap in NbO2 device">I-V threshold switching curve.</canvas></div>
+
+<hr class="div">
+
+<div class="slbl">Thermal dynamics during voltage pulse — does it cross T_Mott?</div>
+<div class="sim-ctrl">
+  <div class="ctrl-row"><span>Pulse voltage</span><input type="range" min="0.3" max="2.5" step="0.1" value="1.5" id="vp-s"><span class="sval" id="vp-o">1.5 V</span></div>
+  <div class="ctrl-row"><span>Pulse width</span><input type="range" min="5" max="120" step="5" value="50" id="tp-s"><span class="sval" id="tp-o">50 ns</span></div>
+</div>
+<div class="legend">
+  <span><span class="lsq" style="background:#D85A30"></span>Device temperature</span>
+  <span><span class="lcaret" style="background:#E24B4A;border-top:2px dashed #E24B4A"></span>T_Mott 1080 K</span>
+  <span><span class="lcaret" style="background:#888780;border-top:2px dashed #888780"></span>T_ambient 300 K</span>
+</div>
+<div id="therm-status" style="font-size:12px;font-weight:500;margin:4px 0 6px;color:var(--color-text-secondary)">Calculating…</div>
+<div style="position:relative;width:100%;height:240px"><canvas id="thC" role="img" aria-label="Device temperature vs time showing Mott transition threshold crossing">Thermal dynamics plot.</canvas></div>
+
+<hr class="div">
+
+<div class="slbl">Resistance window vs write cycles — material comparison</div>
+<div class="legend">
+  <span><span class="lsq" style="background:#D85A30"></span>HfO₂ (current fab)</span>
+  <span><span class="lsq" style="background:#378ADD"></span>NbO₂ lab (current)</span>
+  <span><span class="lsq" style="background:#7F77DD"></span>NbO₂ + W electrode</span>
+  <span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:18px;height:0;border-top:2px dashed #1D9E75;margin-right:3px"></span>Brain target 10¹⁵</span>
+</div>
+<div style="position:relative;width:100%;height:240px"><canvas id="enC" role="img" aria-label="Log-scale resistance window vs write cycles for three materials and brain target line">Endurance comparison chart.</canvas></div>
+
+<hr class="div">
+
+<div class="slbl">Electrode material explorer — how thermal conductivity shifts endurance</div>
+<div class="sim-ctrl">
+  <div class="ctrl-row"><span>Electrode k (W/m·K)</span><input type="range" min="10" max="2000" step="10" value="170" id="ke-s"><span class="sval" id="ke-o">170</span></div>
+</div>
+<div class="mgrid" id="el-cards" style="grid-template-columns:repeat(3,minmax(0,1fr))"></div>
+<div style="position:relative;width:100%;height:220px"><canvas id="elC" role="img" aria-label="Projected endurance log scale vs electrode thermal conductivity">Electrode endurance projection.</canvas></div>
+<div class="note">Common electrodes: TiN ~20 · Pt ~70 · W ~170 · Cu ~400 · Diamond ~2000 W/m·K</div>
+<div class="note" style="margin-top:8px;font-size:12px;color:var(--color-text-secondary)">Green dashed line = brain-scale target (10¹⁵ cycles). Closing this gap is the unsolved materials problem.</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+const T_MOTT=1080,T_AMB=300,R_ON=500,R_TH=2.7e8,C_TH=1e-15;
+const ROFF_OPT=[100e3,200e3,500e3,1e6,2e6];
+const ROFF_LBL=['100 kΩ','200 kΩ','500 kΩ','1 MΩ','2 MΩ'];
+const dark=matchMedia('(prefers-color-scheme: dark)').matches;
+const gc=dark?'rgba(255,255,255,.07)':'rgba(0,0,0,.07)';
+const tc=dark?'#9c9a92':'#5F5E5A';
+const base={responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,callbacks:{label:ctx=>ctx.dataset.label+': '+ctx.parsed.y}}},
+  scales:{x:{grid:{color:gc},ticks:{color:tc,font:{size:11}}},y:{grid:{color:gc},ticks:{color:tc,font:{size:11}}}}};
+
+function computeIV(vth,roff){
+  const vh=vth*0.27,N=300,fwd=[],rev=[];
+  let st=false;
+  for(let i=0;i<=N;i++){const V=(i/N)*(vth*1.65);if(!st&&V>=vth)st=true;fwd.push({x:+V.toFixed(3),y:+(V/(st?R_ON:roff)*1e6).toFixed(4)});}
+  st=true;
+  for(let i=N;i>=0;i--){const V=(i/N)*(vth*1.65);if(st&&V<=vh)st=false;rev.push({x:+V.toFixed(3),y:+(V/(st?R_ON:roff)*1e6).toFixed(4)});}
+  return{fwd,rev};
+}
+
+function simTherm(Vp,tp_ns){
+  const dt=0.4e-9,tot=200e-9,out=[];
+  let T=T_AMB,st=false,cnt=0;
+  for(let t=0;t<tot;t+=dt){
+    const V=(t<tp_ns*1e-9)?Vp:0;
+    const R=st?R_ON:500e3;
+    const dT=((V*V/R)-(T-T_AMB)/R_TH)/C_TH*dt;
+    T=Math.max(T_AMB,T+dT);
+    if(!st&&T>=T_MOTT)st=true;
+    if(st&&T<T_MOTT*0.83&&V<0.05)st=false;
+    if(cnt%5===0)out.push({x:+(t*1e9).toFixed(1),y:+T.toFixed(1)});
+    cnt++;
+  }
+  return out;
+}
+
+function enduranceDatasets(){
+  const mats=[
+    {label:'HfO₂ (fab)',nf:1e9,k:1.15,col:'#D85A30'},
+    {label:'NbO₂ lab',nf:5e10,k:0.95,col:'#378ADD'},
+    {label:'NbO₂ + W',nf:5e12,k:0.82,col:'#7F77DD'}];
+  const xs=Array.from({length:80},(_,i)=>1+i*(15/79));
+  return mats.map(m=>({
+    label:m.label,borderColor:m.col,backgroundColor:'transparent',
+    pointRadius:0,borderWidth:2,tension:0.35,showLine:true,
+    data:xs.map(lx=>{const r=lx/Math.log10(m.nf);const w=Math.max(1,2000*(1-Math.pow(Math.min(r,1),m.k)));return{x:+lx.toFixed(2),y:+w.toFixed(1)};})
+  }));
+}
+
+function elecEndur(k){return+(9+5.6*(1-Math.exp(-k/650))).toFixed(2);}
+
+const ivD=computeIV(1.2,500e3);
+const ivChart=new Chart(document.getElementById('ivC'),{type:'scatter',data:{datasets:[
+  {label:'Forward',data:ivD.fwd,showLine:true,borderColor:'#378ADD',backgroundColor:'transparent',pointRadius:0,borderWidth:2,tension:0.05},
+  {label:'Return',data:ivD.rev,showLine:true,borderColor:'#D85A30',backgroundColor:'transparent',pointRadius:0,borderWidth:1.5,borderDash:[5,3],tension:0.05}
+]},options:{...base,scales:{
+  x:{...base.scales.x,title:{display:true,text:'Voltage (V)',color:tc,font:{size:11}}},
+  y:{...base.scales.y,title:{display:true,text:'Current (μA)',color:tc,font:{size:11}}}
+}}});
+
+const thD=simTherm(1.5,50);
+const thChart=new Chart(document.getElementById('thC'),{type:'scatter',data:{datasets:[
+  {label:'Device T (K)',data:thD,showLine:true,borderColor:'#D85A30',backgroundColor:'transparent',pointRadius:0,borderWidth:2},
+  {label:'T_Mott 1080 K',data:[{x:0,y:1080},{x:200,y:1080}],showLine:true,borderColor:'#E24B4A',borderWidth:1.5,borderDash:[6,4],pointRadius:0},
+  {label:'T_ambient 300 K',data:[{x:0,y:300},{x:200,y:300}],showLine:true,borderColor:'#888780',borderWidth:1,borderDash:[3,4],pointRadius:0}
+]},options:{...base,scales:{
+  x:{...base.scales.x,title:{display:true,text:'Time (ns)',color:tc,font:{size:11}}},
+  y:{...base.scales.y,title:{display:true,text:'Temperature (K)',color:tc,font:{size:11}},min:250,suggestedMax:1200}
+}}});
+
+const enChart=new Chart(document.getElementById('enC'),{type:'scatter',data:{datasets:[
+  ...enduranceDatasets(),
+  {label:'Brain target',data:[{x:1,y:2000},{x:15,y:2000}],showLine:true,borderColor:'#1D9E75',borderWidth:1.5,borderDash:[6,4],pointRadius:0}
+]},options:{...base,scales:{
+  x:{...base.scales.x,min:1,max:15,title:{display:true,text:'log₁₀(write cycles)',color:tc,font:{size:11}}},
+  y:{...base.scales.y,type:'logarithmic',min:1,title:{display:true,text:'R_off / R_on ratio',color:tc,font:{size:11}}}
+}}});
+
+const kxArr=Array.from({length:100},(_,i)=>10+i*20);
+const elChart=new Chart(document.getElementById('elC'),{type:'scatter',data:{datasets:[
+  {label:'log₁₀(endurance)',data:kxArr.map(k=>({x:k,y:elecEndur(k)})),showLine:true,borderColor:'#7F77DD',backgroundColor:'rgba(127,119,221,.07)',fill:true,pointRadius:0,borderWidth:2,tension:0.4},
+  {label:'Brain target 10¹⁵',data:[{x:10,y:15},{x:2000,y:15}],showLine:true,borderColor:'#1D9E75',borderWidth:1.5,borderDash:[6,4],pointRadius:0},
+  {label:'Selected',data:[],pointRadius:8,pointBackgroundColor:'#534AB7',borderColor:'#534AB7',showLine:false}
+]},options:{...base,scales:{
+  x:{...base.scales.x,title:{display:true,text:'Electrode thermal conductivity (W/m·K)',color:tc,font:{size:11}}},
+  y:{...base.scales.y,min:8,max:16,title:{display:true,text:'log₁₀(endurance cycles)',color:tc,font:{size:11}}}
+}}});
+
+function updateElecCards(k){
+  const logE=elecEndur(k);
+  const Tpk=Math.round(T_AMB+780*Math.max(0.25,1-k/2500));
+  const gap=(15-logE).toFixed(1);
+  document.getElementById('el-cards').innerHTML=`
+    <div class="mc"><div class="mc-l">Projected endurance</div><div class="mc-v">10<sup>${logE}</sup></div><div class="mc-s">write cycles</div></div>
+    <div class="mc"><div class="mc-l">Peak cycle temp</div><div class="mc-v">${Tpk} K</div><div class="mc-s">${Tpk<650?'low damage':Tpk<900?'moderate':'high damage'}</div></div>
+    <div class="mc"><div class="mc-l">Gap to target</div><div class="mc-v">${gap} orders</div><div class="mc-s">of magnitude</div></div>`;
+}
+updateElecCards(170);
+
+function updateThermStatus(data,Vp){
+  const maxT=Math.max(...data.map(p=>p.y));
+  const switched=maxT>=T_MOTT;
+  const el=document.getElementById('therm-status');
+  el.style.color=switched?'#993C1D':'#0F6E56';
+  el.textContent=switched
+    ?`Mott transition reached — peak ${Math.round(maxT)} K, device switched to metallic state`
+    :`Sub-threshold — peak ${Math.round(maxT)} K, device stayed insulating (need ${Math.round(T_MOTT-maxT)} K more)`;
+}
+updateThermStatus(thD,1.5);
+
+document.getElementById('vth-s').addEventListener('input',function(){
+  const v=+this.value;
+  document.getElementById('vth-o').textContent=v.toFixed(1)+' V';
+  document.getElementById('m-vth').textContent=v.toFixed(1)+' V';
+  const ri=+document.getElementById('roff-s').value-1;
+  const d=computeIV(v,ROFF_OPT[ri]);
+  ivChart.data.datasets[0].data=d.fwd;ivChart.data.datasets[1].data=d.rev;ivChart.update();
+});
+document.getElementById('roff-s').addEventListener('input',function(){
+  const i=+this.value-1;
+  document.getElementById('roff-o').textContent=ROFF_LBL[i];
+  document.getElementById('m-rwin').textContent=Math.round(ROFF_OPT[i]/R_ON).toLocaleString()+'×';
+  const v=+document.getElementById('vth-s').value;
+  const d=computeIV(v,ROFF_OPT[i]);
+  ivChart.data.datasets[0].data=d.fwd;ivChart.data.datasets[1].data=d.rev;ivChart.update();
+});
+document.getElementById('vp-s').addEventListener('input',function(){
+  const v=+this.value;document.getElementById('vp-o').textContent=v.toFixed(1)+' V';
+  const t=+document.getElementById('tp-s').value;
+  const d=simTherm(v,t);
+  thChart.data.datasets[0].data=d;thChart.update();updateThermStatus(d,v);
+});
+document.getElementById('tp-s').addEventListener('input',function(){
+  const t=+this.value;document.getElementById('tp-o').textContent=t+' ns';
+  const v=+document.getElementById('vp-s').value;
+  const d=simTherm(v,t);
+  thChart.data.datasets[0].data=d;thChart.update();updateThermStatus(d,v);
+});
+document.getElementById('ke-s').addEventListener('input',function(){
+  const k=+this.value;document.getElementById('ke-o').textContent=k;
+  elChart.data.datasets[2].data=[{x:k,y:elecEndur(k)}];elChart.update();
+  updateElecCards(k);
+});
+</script>
